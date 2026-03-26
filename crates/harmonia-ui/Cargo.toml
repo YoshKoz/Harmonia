@@ -1,0 +1,14 @@
+[package]
+name = "harmonia-ui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+harmonia-core.workspace = true
+harmonia-audio.workspace = true
+harmonia-spotify.workspace = true
+gpui.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+parking_lot.workspace = true
+image.workspace = true

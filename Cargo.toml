@@ -1,0 +1,96 @@
+[package]
+name = "harmonia"
+version.workspace = true
+edition.workspace = true
+
+[workspace]
+members = [
+    "crates/harmonia-core",
+    "crates/harmonia-audio",
+    "crates/harmonia-spotify",
+    "crates/harmonia-ui",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+# Internal crates
+harmonia-core = { path = "crates/harmonia-core" }
+harmonia-audio = { path = "crates/harmonia-audio" }
+harmonia-spotify = { path = "crates/harmonia-spotify" }
+harmonia-ui = { path = "crates/harmonia-ui" }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Audio
+symphonia = { version = "0.5", features = ["all"] }
+cpal = "0.15"
+
+# Metadata
+lofty = "0.22"
+
+# Spotify
+rspotify = { version = "0.13", features = ["client-reqwest", "reqwest-rustls-tls"] }
+
+# Database
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# HTTP
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# Image processing
+image = "0.25"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+anyhow = "1"
+thiserror = "2"
+dirs = "6"
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+uuid = { version = "1", features = ["v4"] }
+sha2 = "0.10"
+hex = "0.4"
+
+# GUI - GPUI
+gpui = { git = "https://github.com/zed-industries/zed", rev = "v0.178.4" }
+
+[dependencies]
+harmonia-core = { workspace = true }
+harmonia-audio = { workspace = true }
+harmonia-spotify = { workspace = true }
+harmonia-ui = { workspace = true }
+gpui = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+
+[package]
+name = "harmonia"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+harmonia-core.workspace = true
+harmonia-audio.workspace = true
+harmonia-spotify.workspace = true
+harmonia-ui.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true
+dirs.workspace = true
