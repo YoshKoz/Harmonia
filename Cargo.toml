@@ -37,6 +37,10 @@ lofty = "0.22"
 # Spotify
 rspotify = { version = "0.13", features = ["client-reqwest", "reqwest-rustls-tls"] }
 
+# Spotify streaming (librespot)
+librespot-core = "0.4"
+librespot-playback = { version = "0.4", default-features = false, features = ["rodio-backend"] }
+
 # Database
 rusqlite = { version = "0.32", features = ["bundled"] }
 
@@ -65,6 +69,7 @@ uuid = { version = "1", features = ["v4"] }
 sha2 = "0.10"
 hex = "0.4"
 open = "5"
+rpassword = "7"
 
 # GUI - GPUI
 gpui = { git = "https://github.com/zed-industries/zed", rev = "v0.178.4" }
@@ -80,3 +85,11 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 dirs = { workspace = true }
+rpassword = { workspace = true }
+crossbeam-channel = { workspace = true }
+
+[build-dependencies]
+image = "0.25"
+
+[target.'cfg(target_os = "windows")'.build-dependencies]
+winresource = "0.1"

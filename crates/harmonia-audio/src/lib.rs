@@ -1,5 +1,6 @@
 pub mod local;
 pub mod router;
+pub mod spotify_player;
 
 use harmonia_core::models::PlaybackState;
 

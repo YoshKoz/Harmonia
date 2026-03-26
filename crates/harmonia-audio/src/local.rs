@@ -1,12 +1,12 @@
+use anyhow::Result;
+use crossbeam_channel::{bounded, Receiver, Sender};
+use parking_lot::Mutex;
 use std::path::Path;
 use std::sync::Arc;
-use anyhow::Result;
-use crossbeam_channel::{Receiver, Sender, bounded};
-use parking_lot::Mutex;
-use tracing::{info, error, debug};
+use tracing::{debug, error, info};
 
-use harmonia_core::models::PlaybackState;
 use crate::{PlaybackEngine, PlaybackEvent};
+use harmonia_core::models::PlaybackState;
 
 /// Commands sent from the UI thread to the audio thread.
 enum AudioCommand {
@@ -99,7 +99,9 @@ impl PlaybackEngine for LocalPlayback {
 
     fn set_volume(&mut self, vol: f32) {
         self.shared.lock().volume = vol.clamp(0.0, 1.0);
-        let _ = self.cmd_tx.send(AudioCommand::SetVolume(vol.clamp(0.0, 1.0)));
+        let _ = self
+            .cmd_tx
+            .send(AudioCommand::SetVolume(vol.clamp(0.0, 1.0)));
     }
 
     fn position_ms(&self) -> u64 {
@@ -127,12 +129,8 @@ fn audio_thread_main(
     event_tx: Sender<PlaybackEvent>,
     shared: Arc<Mutex<SharedState>>,
 ) {
-    use symphonia::core::formats::FormatOptions;
-    use symphonia::core::io::MediaSourceStream;
-    use symphonia::core::meta::MetadataOptions;
-    use symphonia::core::probe::Hint;
-    use symphonia::core::audio::Signal;
     use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+    // ...existing code...
 
     let host = cpal::default_host();
     let device = match host.default_output_device() {
@@ -233,8 +231,11 @@ fn audio_thread_main(
                                 s.position_ms = 0;
                                 s.state = PlaybackState::Paused;
                             }
-                            let _ = event_tx.send(PlaybackEvent::TrackLoaded { duration_ms: dur_ms });
-                            let _ = event_tx.send(PlaybackEvent::StateChanged(PlaybackState::Paused));
+                            let _ = event_tx.send(PlaybackEvent::TrackLoaded {
+                                duration_ms: dur_ms,
+                            });
+                            let _ =
+                                event_tx.send(PlaybackEvent::StateChanged(PlaybackState::Paused));
                         }
                         Err(e) => {
                             error!("Failed to load {path}: {e}");
@@ -276,7 +277,8 @@ fn audio_thread_main(
                             track_id: Some(current_track_id),
                         };
                         sample_buf_writer.lock().clear();
-                        if let Err(e) = format.seek(symphonia::core::formats::SeekMode::Coarse, ts) {
+                        if let Err(e) = format.seek(symphonia::core::formats::SeekMode::Coarse, ts)
+                        {
                             error!("Seek error: {e}");
                         } else {
                             shared.lock().position_ms = ms;
@@ -297,9 +299,7 @@ fn audio_thread_main(
 
         // Decode more samples if playing and buffer is low
         if *is_playing.lock() {
-            if let (Some(format), Some(decoder)) =
-                (&mut current_format, &mut current_decoder)
-            {
+            if let (Some(format), Some(decoder)) = (&mut current_format, &mut current_decoder) {
                 let buf_len = sample_buf_writer.lock().len();
                 // Keep ~200ms of audio buffered
                 let target_samples = (sample_rate as usize) * 2 * 200 / 1000;
@@ -322,14 +322,16 @@ fn audio_thread_main(
                                 *is_playing.lock() = false;
                                 shared.lock().state = PlaybackState::Stopped;
                                 let _ = event_tx.send(PlaybackEvent::TrackFinished);
-                                let _ = event_tx.send(PlaybackEvent::StateChanged(PlaybackState::Stopped));
+                                let _ = event_tx
+                                    .send(PlaybackEvent::StateChanged(PlaybackState::Stopped));
                                 current_format = None;
                                 current_decoder = None;
                             }
                         }
                         Err(e) => {
                             error!("Decode error: {e}");
-                            let _ = event_tx.send(PlaybackEvent::Error(format!("Decode error: {e}")));
+                            let _ =
+                                event_tx.send(PlaybackEvent::Error(format!("Decode error: {e}")));
                         }
                     }
                 }
@@ -341,12 +343,14 @@ fn audio_thread_main(
 }
 
 /// Open an audio file and return the format reader, decoder, and metadata.
-fn open_audio_file(path: &str) -> Result<(
+fn open_audio_file(
+    path: &str,
+) -> Result<(
     Box<dyn symphonia::core::formats::FormatReader>,
     Box<dyn symphonia::core::codecs::Decoder>,
-    u32,  // track_id
-    u32,  // sample_rate
-    u64,  // duration_ms
+    u32, // track_id
+    u32, // sample_rate
+    u64, // duration_ms
 )> {
     use symphonia::core::formats::FormatOptions;
     use symphonia::core::io::MediaSourceStream;
@@ -366,11 +370,16 @@ fn open_audio_file(path: &str) -> Result<(
         ..Default::default()
     };
 
-    let probed = symphonia::default::get_probe()
-        .format(&hint, mss, &format_opts, &MetadataOptions::default())?;
+    let probed = symphonia::default::get_probe().format(
+        &hint,
+        mss,
+        &format_opts,
+        &MetadataOptions::default(),
+    )?;
 
     let format = probed.format;
-    let track = format.default_track()
+    let track = format
+        .default_track()
         .ok_or_else(|| anyhow::anyhow!("No audio track found"))?;
 
     let track_id = track.id;
@@ -383,8 +392,8 @@ fn open_audio_file(path: &str) -> Result<(
         0
     };
 
-    let decoder = symphonia::default::get_codecs()
-        .make(&track.codec_params, &Default::default())?;
+    let decoder =
+        symphonia::default::get_codecs().make(&track.codec_params, &Default::default())?;
 
     Ok((format, decoder, track_id, sample_rate, duration_ms))
 }
@@ -395,7 +404,7 @@ fn decode_next_packet(
     decoder: &mut dyn symphonia::core::codecs::Decoder,
     track_id: u32,
 ) -> Result<Option<Vec<f32>>> {
-    use symphonia::core::audio::Signal;
+    // ...existing code...
 
     loop {
         let packet = match format.next_packet() {
@@ -419,10 +428,7 @@ fn decode_next_packet(
 
         // Convert to interleaved stereo f32
         let mut samples = Vec::with_capacity(frames * 2);
-        let mut sample_buf = symphonia::core::audio::SampleBuffer::<f32>::new(
-            frames as u64,
-            spec,
-        );
+        let mut sample_buf = symphonia::core::audio::SampleBuffer::<f32>::new(frames as u64, spec);
         sample_buf.copy_interleaved_ref(decoded);
         let interleaved = sample_buf.samples();
 

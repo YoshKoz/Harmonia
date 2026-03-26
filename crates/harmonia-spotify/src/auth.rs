@@ -12,7 +12,7 @@ const REDIRECT_URI: &str = "http://127.0.0.1:8898/callback";
 /// Manages Spotify OAuth PKCE authentication.
 pub struct SpotifyAuth {
     spotify: AuthCodePkceSpotify,
-    cache_path: PathBuf,
+    cache_path: PathBuf, // intentionally kept for future use
 }
 
 impl SpotifyAuth {
@@ -87,6 +87,13 @@ impl SpotifyAuth {
     /// Check if we have a valid session.
     pub async fn is_authenticated(&self) -> bool {
         self.spotify.current_user().await.is_ok()
+    }
+
+    /// Return the current OAuth access token (e.g. for API calls requiring a fresh token).
+    pub async fn access_token(&self) -> Option<String> {
+        let mutex = self.spotify.get_token();
+        let guard = mutex.lock().await.ok()?;
+        guard.as_ref().map(|t| t.access_token.clone())
     }
 }
 

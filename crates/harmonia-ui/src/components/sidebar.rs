@@ -1,5 +1,5 @@
-use gpui::*;
 use gpui::prelude::FluentBuilder;
+use gpui::*;
 
 use crate::app::ActiveView;
 use crate::theme::HarmoniaTheme;
@@ -12,19 +12,43 @@ struct NavItem {
 }
 
 const NAV_ITEMS: &[NavItem] = &[
-    NavItem { label: "Library", icon: "♫", view: ActiveView::Library },
-    NavItem { label: "Albums", icon: "💿", view: ActiveView::Albums },
-    NavItem { label: "Artists", icon: "🎤", view: ActiveView::Artists },
-    NavItem { label: "Playlists", icon: "📋", view: ActiveView::Playlists },
-    NavItem { label: "Search", icon: "🔍", view: ActiveView::Search },
-    NavItem { label: "Settings", icon: "⚙", view: ActiveView::Settings },
+    NavItem {
+        label: "Library",
+        icon: "♫",
+        view: ActiveView::Library,
+    },
+    NavItem {
+        label: "Albums",
+        icon: "💿",
+        view: ActiveView::Albums,
+    },
+    NavItem {
+        label: "Artists",
+        icon: "🎤",
+        view: ActiveView::Artists,
+    },
+    NavItem {
+        label: "Playlists",
+        icon: "📋",
+        view: ActiveView::Playlists,
+    },
+    NavItem {
+        label: "Search",
+        icon: "🔍",
+        view: ActiveView::Search,
+    },
+    NavItem {
+        label: "Settings",
+        icon: "⚙",
+        view: ActiveView::Settings,
+    },
 ];
 
 /// Render the sidebar navigation.
 pub fn render_sidebar(
     active: ActiveView,
     theme: &HarmoniaTheme,
-    on_navigate: impl Fn(ActiveView) + 'static + Clone,
+    on_navigate: impl Fn(ActiveView, &mut Window, &mut App) + 'static + Clone,
 ) -> impl IntoElement {
     div()
         .flex()
@@ -36,16 +60,13 @@ pub fn render_sidebar(
         .border_color(theme.border)
         .child(
             // Logo / app name
-            div()
-                .px(px(16.0))
-                .py(px(20.0))
-                .child(
-                    div()
-                        .text_size(px(20.0))
-                        .font_weight(FontWeight::BOLD)
-                        .text_color(theme.text_primary)
-                        .child("Harmonia")
-                )
+            div().px(px(16.0)).py(px(20.0)).child(
+                div()
+                    .text_size(px(20.0))
+                    .font_weight(FontWeight::BOLD)
+                    .text_color(theme.text_primary)
+                    .child("Harmonia"),
+            ),
         )
         .child(
             // Navigation items
@@ -71,23 +92,21 @@ pub fn render_sidebar(
                         .when(is_active, |this: Stateful<gpui::Div>| {
                             this.bg(theme.selected)
                         })
-                        .hover(|style: StyleRefinement| {
-                            style.bg(theme.hover)
+                        .hover(|style: StyleRefinement| style.bg(theme.hover))
+                        .on_click(move |_, window, cx| {
+                            on_nav(view, window, cx);
                         })
-                        .on_click(move |_, _, _cx| {
-                            on_nav(view);
-                        })
-                        .child(
-                            div()
-                                .text_size(px(16.0))
-                                .child(item.icon)
-                        )
+                        .child(div().text_size(px(16.0)).child(item.icon))
                         .child(
                             div()
                                 .text_size(px(14.0))
-                                .text_color(if is_active { theme.text_primary } else { theme.text_secondary })
-                                .child(item.label)
+                                .text_color(if is_active {
+                                    theme.text_primary
+                                } else {
+                                    theme.text_secondary
+                                })
+                                .child(item.label),
                         )
-                }))
+                })),
         )
 }

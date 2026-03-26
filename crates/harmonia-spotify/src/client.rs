@@ -1,7 +1,7 @@
 use anyhow::Result;
 use rspotify::prelude::*;
 use rspotify::AuthCodePkceSpotify;
-use rspotify::model::{SimplifiedPlaylist, SavedAlbum, SavedTrack, FullTrack, PlaylistId, SearchType, SearchResult};
+use rspotify::model::{FullTrack, PlaylistId, SearchType, SearchResult};
 use tracing::debug;
 
 /// High-level Spotify API client wrapping rspotify.

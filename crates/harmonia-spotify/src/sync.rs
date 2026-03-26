@@ -13,11 +13,14 @@ pub async fn sync_spotify_library(client: &SpotifyClient, db: &Database) -> Resu
     match client.get_saved_tracks().await {
         Ok(tracks) => {
             for track in &tracks {
-                if let Err(e) = upsert_spotify_track(db, track) {
-                    warn!("Failed to sync track '{}': {e}", track.title);
-                    stats.errors += 1;
-                } else {
-                    stats.tracks_synced += 1;
+                match upsert_spotify_track(db, track).await {
+                    Err(e) => {
+                        warn!("Failed to sync track '{}': {e}", track.title);
+                        stats.errors += 1;
+                    }
+                    Ok(_) => {
+                        stats.tracks_synced += 1;
+                    }
                 }
             }
         }
@@ -40,8 +43,15 @@ pub async fn sync_spotify_library(client: &SpotifyClient, db: &Database) -> Resu
                         match client.get_playlist_tracks(&playlist.id).await {
                             Ok(tracks) => {
                                 for track in &tracks {
-                                    if let Ok(_) = upsert_spotify_track(db, track) {
-                                        // TODO: link track to playlist via playlist_tracks table
+                                    match upsert_spotify_track(db, track).await {
+                                        Ok(track_id) => {
+                                            if let Err(e) = db.add_track_to_playlist(playlist_id, track_id) {
+                                                warn!("Failed to link track to playlist: {e}");
+                                            }
+                                        }
+                                        Err(e) => {
+                                            warn!("Failed to sync playlist track '{}': {e}", track.title);
+                                        }
                                     }
                                 }
                             }
@@ -74,16 +84,34 @@ pub async fn sync_spotify_library(client: &SpotifyClient, db: &Database) -> Resu
     Ok(stats)
 }
 
-fn upsert_spotify_track(db: &Database, track: &SpotifyTrackInfo) -> Result<i64> {
-    // TODO: download and cache artwork from track.image_url
+async fn upsert_spotify_track(db: &Database, track: &SpotifyTrackInfo) -> Result<i64> {
+    let artwork_hash = match &track.image_url {
+        Some(url) => download_and_cache_artwork(db, url).await.ok(),
+        None => None,
+    };
+
     db.upsert_spotify_track(
         &track.uri,
         &track.title,
         &track.artist,
         &track.album,
         track.duration_ms,
-        None, // artwork_hash - will be added when we download images
+        artwork_hash.as_deref(),
     )
+}
+
+/// Download artwork from a URL and cache it in the database.
+async fn download_and_cache_artwork(db: &Database, url: &str) -> Result<String> {
+    let response = reqwest::get(url).await?;
+    let content_type = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("image/jpeg")
+        .to_string();
+    let bytes = response.bytes().await?;
+    let hash = db.cache_artwork(&bytes, &content_type)?;
+    Ok(hash)
 }
 
 #[derive(Debug, Default)]

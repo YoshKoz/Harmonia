@@ -9,7 +9,7 @@ pub fn render_track_list(
     tracks: &[UnifiedTrack],
     selected_index: Option<usize>,
     theme: &HarmoniaTheme,
-    on_track_click: impl Fn(usize) + 'static + Clone,
+    on_track_click: impl Fn(usize, &mut Window, &mut App) + 'static + Clone,
 ) -> impl IntoElement {
     div()
         .flex()
@@ -46,7 +46,7 @@ pub fn render_track_list(
                 .cursor_pointer()
                 .when(is_selected, |this: Stateful<gpui::Div>| this.bg(theme.selected))
                 .hover(|style: StyleRefinement| style.bg(theme.hover))
-                .on_click(move |_, _, _cx| on_click(i))
+                .on_click(move |_, window, cx| on_click(i, window, cx))
                 // Track number
                 .child(
                     div()

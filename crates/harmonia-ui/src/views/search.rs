@@ -10,8 +10,8 @@ pub fn render_search_view(
     query: &str,
     results: &[UnifiedTrack],
     theme: &HarmoniaTheme,
-    on_query_change: impl Fn(String) + 'static,
-    on_track_click: impl Fn(usize) + 'static + Clone,
+    on_query_change: impl Fn(String, &mut Window, &mut App) + 'static,
+    on_track_click: impl Fn(usize, &mut Window, &mut App) + 'static + Clone,
 ) -> impl IntoElement {
     div()
         .flex()

@@ -1,7 +1,7 @@
 use gpui::*;
 
-use harmonia_core::models::{PlaybackState, UnifiedTrack};
 use crate::theme::HarmoniaTheme;
+use harmonia_core::models::{PlaybackState, UnifiedTrack};
 
 /// Render the bottom transport / now-playing bar.
 pub fn render_transport(
@@ -11,9 +11,9 @@ pub fn render_transport(
     duration_ms: u64,
     volume: f32,
     theme: &HarmoniaTheme,
-    on_prev: impl Fn() + 'static,
-    on_play_pause: impl Fn() + 'static,
-    on_next: impl Fn() + 'static,
+    on_prev: impl Fn(&mut Window, &mut App) + 'static,
+    on_play_pause: impl Fn(&mut Window, &mut App) + 'static,
+    on_next: impl Fn(&mut Window, &mut App) + 'static,
 ) -> impl IntoElement {
     let progress_pct = if duration_ms > 0 {
         (position_ms as f32 / duration_ms as f32).clamp(0.0, 1.0)
@@ -39,10 +39,7 @@ pub fn render_transport(
                 .w(px(250.0))
                 .child(
                     // Album art placeholder
-                    div()
-                        .size(px(56.0))
-                        .rounded(px(4.0))
-                        .bg(theme.bg_tertiary)
+                    div().size(px(56.0)).rounded(px(4.0)).bg(theme.bg_tertiary),
                 )
                 .child(
                     div()
@@ -57,8 +54,8 @@ pub fn render_transport(
                                 .child(
                                     current_track
                                         .map(|t| t.display_title().to_string())
-                                        .unwrap_or_else(|| "No track playing".to_string())
-                                )
+                                        .unwrap_or_else(|| "No track playing".to_string()),
+                                ),
                         )
                         .child(
                             div()
@@ -68,10 +65,10 @@ pub fn render_transport(
                                 .child(
                                     current_track
                                         .map(|t| t.display_artist().to_string())
-                                        .unwrap_or_default()
-                                )
-                        )
-                )
+                                        .unwrap_or_default(),
+                                ),
+                        ),
+                ),
         )
         .child(
             // Transport controls (center)
@@ -93,9 +90,11 @@ pub fn render_transport(
                                 .cursor_pointer()
                                 .text_size(px(18.0))
                                 .text_color(theme.text_secondary)
-                                .hover(|style: StyleRefinement| style.text_color(theme.text_primary))
-                                .on_click(move |_, _, _cx| on_prev())
-                                .child("⏮")
+                                .hover(|style: StyleRefinement| {
+                                    style.text_color(theme.text_primary)
+                                })
+                                .on_click(move |_, window, cx| on_prev(window, cx))
+                                .child("⏮"),
                         )
                         // Play/Pause
                         .child(
@@ -109,13 +108,17 @@ pub fn render_transport(
                                 .rounded_full()
                                 .bg(theme.text_primary)
                                 .hover(|style: StyleRefinement| style.bg(theme.accent))
-                                .on_click(move |_, _, _cx| on_play_pause())
+                                .on_click(move |_, window, cx| on_play_pause(window, cx))
                                 .child(
                                     div()
                                         .text_size(px(18.0))
                                         .text_color(theme.bg_primary)
-                                        .child(if state == PlaybackState::Playing { "⏸" } else { "▶" })
-                                )
+                                        .child(if state == PlaybackState::Playing {
+                                            "⏸"
+                                        } else {
+                                            "▶"
+                                        }),
+                                ),
                         )
                         // Next
                         .child(
@@ -124,10 +127,12 @@ pub fn render_transport(
                                 .cursor_pointer()
                                 .text_size(px(18.0))
                                 .text_color(theme.text_secondary)
-                                .hover(|style: StyleRefinement| style.text_color(theme.text_primary))
-                                .on_click(move |_, _, _cx| on_next())
-                                .child("⏭")
-                        )
+                                .hover(|style: StyleRefinement| {
+                                    style.text_color(theme.text_primary)
+                                })
+                                .on_click(move |_, window, cx| on_next(window, cx))
+                                .child("⏭"),
+                        ),
                 )
                 // Progress bar
                 .child(
@@ -140,7 +145,7 @@ pub fn render_transport(
                             div()
                                 .text_size(px(11.0))
                                 .text_color(theme.text_muted)
-                                .child(format_duration(position_ms))
+                                .child(format_duration(position_ms)),
                         )
                         .child(
                             div()
@@ -153,16 +158,16 @@ pub fn render_transport(
                                         .h_full()
                                         .rounded(px(2.0))
                                         .bg(theme.progress_bar)
-                                        .w(relative(progress_pct))
-                                )
+                                        .w(relative(progress_pct)),
+                                ),
                         )
                         .child(
                             div()
                                 .text_size(px(11.0))
                                 .text_color(theme.text_muted)
-                                .child(format_duration(duration_ms))
-                        )
-                )
+                                .child(format_duration(duration_ms)),
+                        ),
+                ),
         )
         .child(
             // Volume (right)
@@ -176,7 +181,7 @@ pub fn render_transport(
                     div()
                         .text_size(px(16.0))
                         .text_color(theme.text_secondary)
-                        .child(if volume > 0.0 { "🔊" } else { "🔇" })
+                        .child(if volume > 0.0 { "🔊" } else { "🔇" }),
                 )
                 .child(
                     div()
@@ -189,9 +194,9 @@ pub fn render_transport(
                                 .h_full()
                                 .rounded(px(2.0))
                                 .bg(theme.text_secondary)
-                                .w(relative(volume))
-                        )
-                )
+                                .w(relative(volume)),
+                        ),
+                ),
         )
 }
 

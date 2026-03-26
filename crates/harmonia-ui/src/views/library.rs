@@ -9,7 +9,7 @@ pub fn render_library_view(
     tracks: &[UnifiedTrack],
     selected_index: Option<usize>,
     theme: &HarmoniaTheme,
-    on_track_click: impl Fn(usize) + 'static + Clone,
+    on_track_click: impl Fn(usize, &mut Window, &mut App) + 'static + Clone,
 ) -> impl IntoElement {
     div()
         .flex()

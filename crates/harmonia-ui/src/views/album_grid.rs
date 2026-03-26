@@ -9,7 +9,7 @@ pub fn render_album_grid(
     albums: &[Album],
     grid_size: u32,
     theme: &HarmoniaTheme,
-    on_album_click: impl Fn(usize) + 'static + Clone,
+    on_album_click: impl Fn(usize, &mut Window, &mut App) + 'static + Clone,
 ) -> impl IntoElement {
     let item_size = grid_size as f32;
 
@@ -60,7 +60,7 @@ pub fn render_album_grid(
                         .rounded(px(8.0))
                         .overflow_hidden()
                         .hover(|style: StyleRefinement| style.bg(theme.hover))
-                        .on_click(move |_, _, _cx| on_click(i))
+                        .on_click(move |_, window, cx| on_click(i, window, cx))
                         // Artwork placeholder
                         .child(
                             div()

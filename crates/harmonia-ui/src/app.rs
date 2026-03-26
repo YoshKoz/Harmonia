@@ -2,6 +2,7 @@ use gpui::*;
 use std::sync::Arc;
 use parking_lot::Mutex;
 
+use harmonia_core::config::Theme;
 use harmonia_core::db::Database;
 use harmonia_core::models::*;
 use harmonia_audio::router::AudioRouter;
@@ -12,8 +13,10 @@ use crate::theme::HarmoniaTheme;
 pub enum ActiveView {
     Library,
     Albums,
+    AlbumDetail,
     Artists,
     Playlists,
+    PlaylistDetail,
     Search,
     NowPlaying,
     Settings,
@@ -29,25 +32,38 @@ pub struct AppState {
     pub queue: Vec<UnifiedTrack>,
     pub queue_index: usize,
     pub search_query: String,
+    pub search_results: Vec<UnifiedTrack>,
     pub tracks_cache: Vec<UnifiedTrack>,
     pub albums_cache: Vec<Album>,
     pub playlists_cache: Vec<Playlist>,
+    pub selected_album: Option<Album>,
+    pub album_tracks_cache: Vec<UnifiedTrack>,
+    pub selected_playlist: Option<Playlist>,
+    pub playlist_tracks_cache: Vec<UnifiedTrack>,
 }
 
 impl AppState {
-    pub fn new(db: Database, audio: AudioRouter) -> Self {
+    pub fn new(db: Database, audio: AudioRouter, theme: Theme) -> Self {
         Self {
             db,
             audio: Arc::new(Mutex::new(audio)),
-            theme: HarmoniaTheme::dark(),
+            theme: match theme {
+                Theme::Dark => HarmoniaTheme::dark(),
+                Theme::Light => HarmoniaTheme::light(),
+            },
             active_view: ActiveView::Library,
             current_track: None,
             queue: Vec::new(),
             queue_index: 0,
             search_query: String::new(),
+            search_results: Vec::new(),
             tracks_cache: Vec::new(),
             albums_cache: Vec::new(),
             playlists_cache: Vec::new(),
+            selected_album: None,
+            album_tracks_cache: Vec::new(),
+            selected_playlist: None,
+            playlist_tracks_cache: Vec::new(),
         }
     }
 
@@ -94,5 +110,37 @@ impl AppState {
     pub fn play_tracks(&mut self, tracks: Vec<UnifiedTrack>, start_index: usize) {
         self.queue = tracks;
         self.play_track_at(start_index);
+    }
+
+    /// Navigate into album detail view.
+    pub fn navigate_to_album(&mut self, index: usize) {
+        if let Some(album) = self.albums_cache.get(index).cloned() {
+            if let Ok(tracks) = self.db.get_album_tracks(&album.title, &album.artist) {
+                self.album_tracks_cache = tracks;
+            }
+            self.selected_album = Some(album);
+            self.active_view = ActiveView::AlbumDetail;
+        }
+    }
+
+    /// Navigate into playlist detail view.
+    pub fn navigate_to_playlist(&mut self, index: usize) {
+        if let Some(playlist) = self.playlists_cache.get(index).cloned() {
+            if let Ok(tracks) = self.db.get_playlist_tracks(playlist.id) {
+                self.playlist_tracks_cache = tracks;
+            }
+            self.selected_playlist = Some(playlist);
+            self.active_view = ActiveView::PlaylistDetail;
+        }
+    }
+
+    /// Perform a search query.
+    pub fn perform_search(&mut self, query: &str) {
+        self.search_query = query.to_string();
+        if query.is_empty() {
+            self.search_results.clear();
+        } else if let Ok(results) = self.db.search_tracks(query) {
+            self.search_results = results;
+        }
     }
 }

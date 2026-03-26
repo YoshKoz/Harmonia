@@ -12,3 +12,6 @@ parking_lot.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+tokio.workspace = true
+librespot-core.workspace = true
+librespot-playback.workspace = true

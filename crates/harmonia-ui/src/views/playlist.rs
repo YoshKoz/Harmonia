@@ -8,7 +8,7 @@ use crate::theme::HarmoniaTheme;
 pub fn render_playlist_view(
     playlists: &[Playlist],
     theme: &HarmoniaTheme,
-    on_playlist_click: impl Fn(usize) + 'static + Clone,
+    on_playlist_click: impl Fn(usize, &mut Window, &mut App) + 'static + Clone,
 ) -> impl IntoElement {
     div()
         .flex()
@@ -61,7 +61,7 @@ pub fn render_playlist_view(
                         .rounded(px(6.0))
                         .cursor_pointer()
                         .hover(|style: StyleRefinement| style.bg(theme.hover))
-                        .on_click(move |_, _, _cx| on_click(i))
+                        .on_click(move |_, window, cx| on_click(i, window, cx))
                         // Icon
                         .child(
                             div()
