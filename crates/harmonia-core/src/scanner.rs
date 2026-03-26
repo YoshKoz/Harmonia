@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use anyhow::Result;
-use lofty::file::TaggedFileExt;
+use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::tag::Accessor;
 use tracing::{info, warn, debug};
 
@@ -103,8 +103,8 @@ fn process_audio_file(db: &Database, path: &Path) -> Result<()> {
             tag.title().unwrap_or_default().to_string(),
             tag.artist().unwrap_or_default().to_string(),
             tag.get_string(&lofty::tag::ItemKey::AlbumArtist)
-                .unwrap_or_else(|| tag.artist().unwrap_or_default())
-                .to_string(),
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| tag.artist().unwrap_or_default().to_string()),
             tag.album().unwrap_or_default().to_string(),
             tag.genre().unwrap_or_default().to_string(),
             tag.year(),

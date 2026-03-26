@@ -1,4 +1,5 @@
 use gpui::*;
+use gpui::prelude::FluentBuilder;
 
 use crate::app::ActiveView;
 use crate::theme::HarmoniaTheme;
@@ -67,11 +68,11 @@ pub fn render_sidebar(
                         .py(px(8.0))
                         .rounded(px(6.0))
                         .cursor_pointer()
-                        .when(is_active, |this| {
+                        .when(is_active, |this: Stateful<gpui::Div>| {
                             this.bg(theme.selected)
                         })
-                        .hover(|this| {
-                            this.bg(theme.hover)
+                        .hover(|style: StyleRefinement| {
+                            style.bg(theme.hover)
                         })
                         .on_click(move |_, _, _cx| {
                             on_nav(view);

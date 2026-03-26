@@ -1,4 +1,5 @@
 use gpui::*;
+use gpui::prelude::FluentBuilder;
 
 use harmonia_core::models::UnifiedTrack;
 use crate::theme::HarmoniaTheme;
@@ -45,7 +46,7 @@ pub fn render_search_view(
                 )
         )
         // Results
-        .when(!results.is_empty(), |this| {
+        .when(!results.is_empty(), |this: gpui::Div| {
             this.child(
                 div()
                     .px(px(24.0))
@@ -56,7 +57,7 @@ pub fn render_search_view(
             )
             .child(render_track_list(results, None, theme, on_track_click))
         })
-        .when(results.is_empty() && !query.is_empty(), |this| {
+        .when(results.is_empty() && !query.is_empty(), |this: gpui::Div| {
             this.child(
                 div()
                     .flex()

@@ -1,4 +1,5 @@
 use gpui::*;
+use gpui::prelude::FluentBuilder;
 
 use harmonia_core::models::Album;
 use crate::theme::HarmoniaTheme;
@@ -16,7 +17,7 @@ pub fn render_album_grid(
         .flex()
         .flex_col()
         .size_full()
-        .overflow_y_scroll()
+        .overflow_y_hidden()
         // Header
         .child(
             div()
@@ -58,7 +59,7 @@ pub fn render_album_grid(
                         .cursor_pointer()
                         .rounded(px(8.0))
                         .overflow_hidden()
-                        .hover(|this| this.bg(theme.hover))
+                        .hover(|style: StyleRefinement| style.bg(theme.hover))
                         .on_click(move |_, _, _cx| on_click(i))
                         // Artwork placeholder
                         .child(

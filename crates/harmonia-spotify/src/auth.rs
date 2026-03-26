@@ -112,7 +112,7 @@ async fn wait_for_callback() -> Result<String> {
             url::form_urlencoded::parse(
                 path.split('?').nth(1).unwrap_or("").as_bytes()
             )
-            .find(|(key, _)| key == "code")
+            .find(|(key, _): &(std::borrow::Cow<str>, std::borrow::Cow<str>)| key == "code")
             .map(|(_, val)| val.to_string())
         })
         .ok_or_else(|| anyhow::anyhow!("No authorization code in callback"))?;

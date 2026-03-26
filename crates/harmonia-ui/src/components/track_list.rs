@@ -1,4 +1,5 @@
 use gpui::*;
+use gpui::prelude::FluentBuilder;
 
 use harmonia_core::models::UnifiedTrack;
 use crate::theme::HarmoniaTheme;
@@ -14,7 +15,7 @@ pub fn render_track_list(
         .flex()
         .flex_col()
         .size_full()
-        .overflow_y_scroll()
+        .overflow_y_hidden()
         // Header row
         .child(
             div()
@@ -43,8 +44,8 @@ pub fn render_track_list(
                 .px(px(16.0))
                 .py(px(6.0))
                 .cursor_pointer()
-                .when(is_selected, |this| this.bg(theme.selected))
-                .hover(|this| this.bg(theme.hover))
+                .when(is_selected, |this: Stateful<gpui::Div>| this.bg(theme.selected))
+                .hover(|style: StyleRefinement| style.bg(theme.hover))
                 .on_click(move |_, _, _cx| on_click(i))
                 // Track number
                 .child(
@@ -69,7 +70,7 @@ pub fn render_track_list(
                                 .overflow_hidden()
                                 .child(track.display_title().to_string())
                         )
-                        .when(track.is_spotify(), |this| {
+                        .when(track.is_spotify(), |this: gpui::Div| {
                             this.child(
                                 div()
                                     .text_size(px(10.0))

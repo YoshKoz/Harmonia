@@ -1,4 +1,5 @@
 use gpui::*;
+use gpui::prelude::FluentBuilder;
 
 use harmonia_core::models::Playlist;
 use crate::theme::HarmoniaTheme;
@@ -13,7 +14,7 @@ pub fn render_playlist_view(
         .flex()
         .flex_col()
         .size_full()
-        .overflow_y_scroll()
+        .overflow_y_hidden()
         // Header
         .child(
             div()
@@ -59,7 +60,7 @@ pub fn render_playlist_view(
                         .py(px(10.0))
                         .rounded(px(6.0))
                         .cursor_pointer()
-                        .hover(|this| this.bg(theme.hover))
+                        .hover(|style: StyleRefinement| style.bg(theme.hover))
                         .on_click(move |_, _, _cx| on_click(i))
                         // Icon
                         .child(
@@ -101,7 +102,7 @@ pub fn render_playlist_view(
                                                 .text_color(theme.text_secondary)
                                                 .child(format!("{} tracks", playlist.track_count))
                                         )
-                                        .when(!source_badge.is_empty(), |this| {
+                                        .when(!source_badge.is_empty(), |this: gpui::Div| {
                                             this.child(
                                                 div()
                                                     .text_size(px(11.0))

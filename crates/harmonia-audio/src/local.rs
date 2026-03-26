@@ -297,7 +297,7 @@ fn audio_thread_main(
 
         // Decode more samples if playing and buffer is low
         if *is_playing.lock() {
-            if let (Some(ref mut format), Some(ref mut decoder)) =
+            if let (Some(format), Some(decoder)) =
                 (&mut current_format, &mut current_decoder)
             {
                 let buf_len = sample_buf_writer.lock().len();

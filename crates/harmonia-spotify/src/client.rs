@@ -78,7 +78,7 @@ impl SpotifyClient {
         let pid = PlaylistId::from_id(playlist_id)?;
 
         loop {
-            let page = self.api.playlist_items_manual(&pid, None, None, Some(limit), Some(offset)).await?;
+            let page = self.api.playlist_items_manual(pid.clone(), None, None, Some(limit), Some(offset)).await?;
             for item in &page.items {
                 if let Some(rspotify::model::PlayableItem::Track(track)) = &item.track {
                     tracks.push(full_track_to_info(track));
@@ -104,11 +104,14 @@ impl SpotifyClient {
             for saved in &page.items {
                 let album = &saved.album;
                 albums.push(SpotifyAlbumInfo {
-                    uri: album.id.as_ref().map(|id| id.to_string()).unwrap_or_default(),
+                    uri: album.id.to_string(),
                     name: album.name.clone(),
                     artist: album.artists.first().map(|a| a.name.clone()).unwrap_or_default(),
                     image_url: album.images.first().map(|i| i.url.clone()),
-                    year: album.release_date.as_ref().and_then(|d| d[..4].parse().ok()),
+                    year: {
+                        let date = &album.release_date;
+                        if date.len() >= 4 { date[..4].parse().ok() } else { None }
+                    },
                 });
             }
             if page.next.is_none() {

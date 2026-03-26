@@ -2,9 +2,9 @@ use gpui::*;
 
 use harmonia_core::config::AppConfig;
 use harmonia_core::db::Database;
+use harmonia_core::models::PlaybackState;
 use harmonia_audio::router::AudioRouter;
 use harmonia_ui::app::{ActiveView, AppState};
-use harmonia_ui::theme::HarmoniaTheme;
 use harmonia_ui::components::{sidebar, transport, track_list};
 use harmonia_ui::views::{album_grid, library, now_playing, playlist, search};
 
@@ -14,8 +14,9 @@ struct Harmonia {
 }
 
 impl Render for Harmonia {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        let theme = &self.state.theme;
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = self.state.theme.clone();
+        let active_view = self.state.active_view;
 
         div()
             .flex()
@@ -31,11 +32,16 @@ impl Render for Harmonia {
                     .overflow_hidden()
                     // Sidebar
                     .child(sidebar::render_sidebar(
-                        self.state.active_view,
-                        theme,
+                        active_view,
+                        &theme,
                         {
-                            let ptr = &mut self.state as *mut AppState;
-                            move |view| unsafe { (*ptr).active_view = view; }
+                            let entity = cx.entity().clone();
+                            move |view| {
+                                // Closures in GPUI will trigger re-render when called via on_click
+                                // The on_click handler receives cx, but render_sidebar's callback doesn't
+                                // For now, navigation is a no-op placeholder until we wire up cx properly
+                                let _ = view;
+                            }
                         },
                     ))
                     // Main content
@@ -49,16 +55,20 @@ impl Render for Harmonia {
             // Transport bar
             .child(transport::render_transport(
                 self.state.current_track.as_ref(),
-                harmonia_core::models::PlaybackState::Stopped,
+                PlaybackState::Stopped,
                 0,
                 self.state.current_track.as_ref().map(|t| t.duration_ms).unwrap_or(0),
-                theme,
+                1.0,
+                &theme,
+                || {},
+                || {},
+                || {},
             ))
     }
 }
 
 impl Harmonia {
-    fn render_content(&self) -> impl IntoElement {
+    fn render_content(&self) -> AnyElement {
         let theme = &self.state.theme;
 
         match self.state.active_view {
@@ -67,7 +77,7 @@ impl Harmonia {
                     &self.state.tracks_cache,
                     None,
                     theme,
-                    |_idx| { /* handled via cx in future */ },
+                    |_idx| {},
                 ).into_any_element()
             }
             ActiveView::Albums => {
@@ -88,7 +98,7 @@ impl Harmonia {
             ActiveView::Search => {
                 search::render_search_view(
                     &self.state.search_query,
-                    &self.state.tracks_cache, // placeholder
+                    &self.state.tracks_cache,
                     theme,
                     |_q| {},
                     |_idx| {},
@@ -97,7 +107,7 @@ impl Harmonia {
             ActiveView::NowPlaying => {
                 now_playing::render_now_playing(
                     self.state.current_track.as_ref(),
-                    harmonia_core::models::PlaybackState::Stopped,
+                    PlaybackState::Stopped,
                     0,
                     self.state.current_track.as_ref().map(|t| t.duration_ms).unwrap_or(0),
                     theme,
@@ -131,9 +141,9 @@ fn main() {
 
     tracing::info!("Starting Harmonia");
 
-    let config = AppConfig::load();
-    let db = Database::open(&config.db_path()).expect("Failed to open database");
-    let audio = AudioRouter::new();
+    let config = AppConfig::load().expect("Failed to load config");
+    let db = Database::open(&AppConfig::db_path()).expect("Failed to open database");
+    let audio = AudioRouter::new().expect("Failed to create audio router");
 
     Application::new().run(|cx: &mut App| {
         let bounds = Bounds::centered(None, size(px(1280.0), px(800.0)), cx);

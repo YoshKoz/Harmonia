@@ -64,6 +64,7 @@ crossbeam-channel = "0.5"
 uuid = { version = "1", features = ["v4"] }
 sha2 = "0.10"
 hex = "0.4"
+open = "5"
 
 # GUI - GPUI
 gpui = { git = "https://github.com/zed-industries/zed", rev = "v0.178.4" }
@@ -78,19 +79,4 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
-
-[package]
-name = "harmonia"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-harmonia-core.workspace = true
-harmonia-audio.workspace = true
-harmonia-spotify.workspace = true
-harmonia-ui.workspace = true
-tokio.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
-anyhow.workspace = true
-dirs.workspace = true
+dirs = { workspace = true }

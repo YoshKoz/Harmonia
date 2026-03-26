@@ -18,3 +18,4 @@ uuid.workspace = true
 parking_lot.workspace = true
 image.workspace = true
 lofty.workspace = true
+crossbeam-channel.workspace = true
