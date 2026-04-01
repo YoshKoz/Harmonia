@@ -3,10 +3,10 @@ use crossbeam_channel::{bounded, Receiver, Sender};
 use std::path::PathBuf;
 use tracing::{info, warn};
 
-use harmonia_core::models::{PlaybackState, TrackSource, UnifiedTrack};
-use crate::{PlaybackEngine, PlaybackEvent};
 use crate::local::LocalPlayback;
 use crate::spotify_player::SpotifyPlayer;
+use crate::{PlaybackEngine, PlaybackEvent};
+use harmonia_core::models::{PlaybackState, TrackSource, UnifiedTrack};
 
 /// Dispatches playback to the correct engine based on track source.
 pub struct AudioRouter {
@@ -82,7 +82,9 @@ impl AudioRouter {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.play(),
             Some(TrackSource::Spotify(_)) => {
-                if let Some(sp) = &mut self.spotify_engine { sp.play(); }
+                if let Some(sp) = &mut self.spotify_engine {
+                    sp.play();
+                }
             }
             _ => {}
         }
@@ -92,7 +94,9 @@ impl AudioRouter {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.pause(),
             Some(TrackSource::Spotify(_)) => {
-                if let Some(sp) = &mut self.spotify_engine { sp.pause(); }
+                if let Some(sp) = &mut self.spotify_engine {
+                    sp.pause();
+                }
             }
             _ => {}
         }
@@ -102,7 +106,9 @@ impl AudioRouter {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.stop(),
             Some(TrackSource::Spotify(_)) => {
-                if let Some(sp) = &mut self.spotify_engine { sp.stop(); }
+                if let Some(sp) = &mut self.spotify_engine {
+                    sp.stop();
+                }
             }
             _ => {}
         }
@@ -112,7 +118,9 @@ impl AudioRouter {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.seek(position_ms),
             Some(TrackSource::Spotify(_)) => {
-                if let Some(sp) = &mut self.spotify_engine { sp.seek(position_ms); }
+                if let Some(sp) = &mut self.spotify_engine {
+                    sp.seek(position_ms);
+                }
             }
             _ => {}
         }
@@ -132,9 +140,11 @@ impl AudioRouter {
     pub fn position_ms(&self) -> u64 {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.position_ms(),
-            Some(TrackSource::Spotify(_)) => {
-                self.spotify_engine.as_ref().map(|sp| sp.position_ms()).unwrap_or(0)
-            }
+            Some(TrackSource::Spotify(_)) => self
+                .spotify_engine
+                .as_ref()
+                .map(|sp| sp.position_ms())
+                .unwrap_or(0),
             _ => 0,
         }
     }
@@ -142,9 +152,11 @@ impl AudioRouter {
     pub fn duration_ms(&self) -> u64 {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.duration_ms(),
-            Some(TrackSource::Spotify(_)) => {
-                self.spotify_engine.as_ref().map(|sp| sp.duration_ms()).unwrap_or(0)
-            }
+            Some(TrackSource::Spotify(_)) => self
+                .spotify_engine
+                .as_ref()
+                .map(|sp| sp.duration_ms())
+                .unwrap_or(0),
             _ => 0,
         }
     }
@@ -152,9 +164,11 @@ impl AudioRouter {
     pub fn state(&self) -> PlaybackState {
         match &self.current_source {
             Some(TrackSource::Local(_)) => self.local_engine.state(),
-            Some(TrackSource::Spotify(_)) => {
-                self.spotify_engine.as_ref().map(|sp| sp.state()).unwrap_or(PlaybackState::Stopped)
-            }
+            Some(TrackSource::Spotify(_)) => self
+                .spotify_engine
+                .as_ref()
+                .map(|sp| sp.state())
+                .unwrap_or(PlaybackState::Stopped),
             _ => PlaybackState::Stopped,
         }
     }

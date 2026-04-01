@@ -276,15 +276,30 @@ fn main() {
     let stream_cache = AppConfig::app_data_dir().join("spotify-stream");
     audio.enable_spotify(stream_cache);
 
-    // Spotify library sync (metadata) via OAuth
-    let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
-    match SpotifyAuth::new(AppConfig::spotify_cache_dir()) {
-        Ok(mut auth) => {
-            if let Err(e) = rt.block_on(auth.authenticate()) {
-                tracing::warn!("Spotify OAuth failed: {e}");
-            }
-        }
-        Err(e) => tracing::warn!("Spotify auth init failed: {e}"),
+    // Spotify library sync (metadata) via OAuth — runs in background, never blocks UI.
+    // Requires spotify.client_id in config.toml (register at developer.spotify.com).
+    if let Some(client_id) = config.spotify.client_id.clone() {
+        std::thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("tokio rt");
+            rt.block_on(async move {
+                match SpotifyAuth::new(AppConfig::spotify_cache_dir(), &client_id) {
+                    Ok(mut auth) => {
+                        if let Err(e) = auth.authenticate().await {
+                            tracing::warn!("Spotify OAuth failed: {e}");
+                        }
+                    }
+                    Err(e) => tracing::warn!("Spotify auth init failed: {e}"),
+                }
+            });
+        });
+    } else {
+        tracing::info!(
+            "Spotify library sync disabled — set spotify.client_id in {}",
+            AppConfig::config_path().display()
+        );
     }
 
     Application::new().run(|cx: &mut App| {

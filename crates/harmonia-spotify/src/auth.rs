@@ -4,9 +4,6 @@ use rspotify::{AuthCodePkceSpotify, Config, Credentials, OAuth, scopes};
 use std::path::PathBuf;
 use tracing::{info, error};
 
-/// Harmonia's Spotify client ID (you must register your own app at https://developer.spotify.com).
-/// This placeholder must be replaced with a real client ID.
-const CLIENT_ID: &str = "YOUR_SPOTIFY_CLIENT_ID";
 const REDIRECT_URI: &str = "http://127.0.0.1:8898/callback";
 
 /// Manages Spotify OAuth PKCE authentication.
@@ -16,8 +13,9 @@ pub struct SpotifyAuth {
 }
 
 impl SpotifyAuth {
-    /// Create a new SpotifyAuth with the given cache directory.
-    pub fn new(cache_dir: PathBuf) -> Result<Self> {
+    /// Create a new SpotifyAuth.
+    /// `client_id` must be registered at <https://developer.spotify.com/dashboard>.
+    pub fn new(cache_dir: PathBuf, client_id: &str) -> Result<Self> {
         std::fs::create_dir_all(&cache_dir)?;
 
         let config = Config {
@@ -26,7 +24,7 @@ impl SpotifyAuth {
             ..Default::default()
         };
 
-        let creds = Credentials::new_pkce(CLIENT_ID);
+        let creds = Credentials::new_pkce(client_id);
         let oauth = OAuth {
             redirect_uri: REDIRECT_URI.to_string(),
             scopes: scopes!(

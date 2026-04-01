@@ -20,6 +20,9 @@ pub struct LibraryConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpotifyConfig {
     pub enabled: bool,
+    /// OAuth client ID from https://developer.spotify.com/dashboard
+    /// Required for library sync. Streaming uses a separate login flow.
+    pub client_id: Option<String>,
     pub cache_path: Option<PathBuf>,
     pub sync_interval_minutes: u32,
 }
@@ -59,6 +62,7 @@ impl Default for AppConfig {
             },
             spotify: SpotifyConfig {
                 enabled: true,
+                client_id: None,
                 cache_path: None,
                 sync_interval_minutes: 30,
             },
