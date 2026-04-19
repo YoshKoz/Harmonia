@@ -1,4 +1,5 @@
 use gpui::*;
+use std::path::PathBuf;
 use std::sync::Arc;
 use parking_lot::Mutex;
 
@@ -28,6 +29,7 @@ pub struct AppState {
     pub audio: Arc<Mutex<AudioRouter>>,
     pub theme: HarmoniaTheme,
     pub active_view: ActiveView,
+    pub music_folders: Vec<PathBuf>,
     pub current_track: Option<UnifiedTrack>,
     pub queue: Vec<UnifiedTrack>,
     pub queue_index: usize,
@@ -43,7 +45,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(db: Database, audio: AudioRouter, theme: Theme) -> Self {
+    pub fn new(db: Database, audio: AudioRouter, theme: Theme, music_folders: Vec<PathBuf>) -> Self {
         Self {
             db,
             audio: Arc::new(Mutex::new(audio)),
@@ -52,6 +54,7 @@ impl AppState {
                 Theme::Light => HarmoniaTheme::light(),
             },
             active_view: ActiveView::Library,
+            music_folders,
             current_track: None,
             queue: Vec::new(),
             queue_index: 0,

@@ -2,6 +2,7 @@ use gpui::*;
 
 use harmonia_core::config::AppConfig;
 use harmonia_core::db::Database;
+use harmonia_core::scanner;
 use harmonia_audio::router::AudioRouter;
 use harmonia_spotify::auth::SpotifyAuth;
 use harmonia_ui::app::{ActiveView, AppState};
@@ -237,7 +238,10 @@ impl Harmonia {
                 ).into_any_element()
             }
             ActiveView::Settings => {
-                let library_dirs: Vec<String> = Vec::new(); // TODO: read from config
+                let library_dirs: Vec<String> = self.state.music_folders
+                    .iter()
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .collect();
                 settings::render_settings_view(
                     theme,
                     &library_dirs,
@@ -302,6 +306,9 @@ fn main() {
         );
     }
 
+    let scan_on_startup = config.library.scan_on_startup;
+    let music_folders = config.library.music_folders.clone();
+
     Application::new().run(|cx: &mut App| {
         let bounds = Bounds::centered(None, size(px(1280.0), px(800.0)), cx);
 
@@ -321,7 +328,21 @@ fn main() {
                 ..Default::default()
             },
             move |_window, cx| {
-                let mut state = AppState::new(db, audio, selected_theme);
+                if scan_on_startup {
+                    let track_count = db.get_tracks(None).map(|t| t.len()).unwrap_or(0);
+                    if track_count == 0 {
+                        // First run: scan now so the library is populated immediately.
+                        let _ = scanner::scan_library(&db, &music_folders, None);
+                    } else {
+                        // Subsequent runs: scan in background, don't block startup.
+                        let bg_db = db.clone();
+                        let bg_folders = music_folders.clone();
+                        std::thread::spawn(move || {
+                            let _ = scanner::scan_library(&bg_db, &bg_folders, None);
+                        });
+                    }
+                }
+                let mut state = AppState::new(db, audio, selected_theme, music_folders);
                 state.refresh_library();
                 cx.new(|_| Harmonia { state })
             },
